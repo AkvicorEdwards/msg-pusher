@@ -61,6 +61,8 @@ func (q *queueModel) push(pkg mod.Package, msg *mod.MessageModel, history *db.Hi
 	q.data[i] = item
 }
 
+// pop() returns the message to be sent within 30 seconds
+//    if not, returns the wait time for the next message to send minus 15 seconds
 func (q *queueModel) pop() (*queueItem, time.Duration) {
 	if q.index <= 0 {
 		return nil, 10 * time.Minute
@@ -70,7 +72,8 @@ func (q *queueModel) pop() (*queueItem, time.Duration) {
 	var item = q.data[q.index-1]
 	limit := time.Now().Unix() + 30
 	if item.Message.TimeSend > limit {
-		return nil, time.Duration(item.Message.TimeSend - limit + 15)
+		glog.Trace("pop: need[%d] now[%d] x[%d] ret[%d]", item.Message.TimeSend, limit-30, item.Message.TimeSend-limit+30, item.Message.TimeSend-limit+15)
+		return nil, time.Duration(item.Message.TimeSend-limit+15) * time.Second
 	}
 	q.index--
 	q.data[q.index] = nil
@@ -99,6 +102,7 @@ func service() {
 	}()
 	var duration = trySend()
 	for {
+		glog.Trace("next ticker wait [%v]", duration)
 		select {
 		case <-queue.killed:
 			glog.Trace("killed")
@@ -130,13 +134,15 @@ func waitSend(item *queueItem) {
 		if send < 0 {
 			send = 0
 		}
-		return time.Duration(send)
+		return time.Duration(send) * time.Second
 	}
 	var ok bool
 	limit := 1
+	w := wait(item.Message.TimeSend)
+	glog.Trace("send wait [%v]", w)
 
 	select {
-	case <-time.After(wait(item.Message.TimeSend)):
+	case <-time.After(w):
 		if queue.dead {
 			glog.Trace("dead [%s]", item.Message.String())
 			return
