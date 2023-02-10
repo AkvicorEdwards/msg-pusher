@@ -1,0 +1,12 @@
+{{ template "header" . }}
+
+<div class="wrapper">
+    <div class="container">
+        <form class="form">
+            <button onClick="window.location.href='/'" type="button">RETURN</button><br /><br /><br />
+            <button onClick="window.location.href='{{ $.mod_url }}/secret'" type="button">SECRET</button><br /><br />
+        </form>
+    </div>
+</div>
+
+{{ template "footer" . }}

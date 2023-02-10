@@ -1,0 +1,18 @@
+{{ template "header" . }}
+
+<div class="wrapper">
+    <div class="container">
+        <form class="form">
+            <button onClick="window.location.href='/'" type="button">RETURN</button><br /><br /><br />
+            {{ range .targets }}
+            <label>
+                <button type="button">{{ . }}</button><br /><br />
+            </label>
+            {{ else }}
+                <button type="button">EMPTY</button><br /><br />
+            {{ end}}
+        </form>
+    </div>
+</div>
+
+{{ template "footer" . }}
