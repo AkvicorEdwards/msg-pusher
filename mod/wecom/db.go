@@ -54,16 +54,19 @@ func (w *ModWecomModel) GetExpired() int64 {
 	return w.Expired
 }
 
-func InsertDatabaseTable() {
+func InsertDatabaseTable() bool {
 	d := db.Connect()
 	if d == nil {
 		glog.Fatal("can not connect database")
+		return false
 	}
 	err := d.AutoMigrate(&ModWecomModel{})
 	if err != nil {
 		glog.Fatal("failed to create table [%s]", err.Error())
+		return false
 	}
 	glog.Info("database table insert finished [%s]", ModWecomModel{}.TableName())
+	return true
 }
 
 func getWecomByID(id int64) *ModWecomModel {

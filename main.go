@@ -31,6 +31,59 @@ func main() {
 
 	config.Load(*c)
 
+	setGlog()
+
+	if *isInit {
+		initDatabase()
+	}
+	if util.FileStat(config.Global.Database.Path) != 2 {
+		glog.Fatal("missing database [%s]!", config.Global.Database.Path)
+	}
+
+	EnableShutDownListener()
+
+	initApp()
+
+	send.EnableServer()
+
+	addr := fmt.Sprintf("%s:%d", config.Global.Server.HTTPAddr, config.Global.Server.HTTPPort)
+	if config.Global.Server.EnableHTTPS {
+		glog.Info("ListenAndServe: https://%s", addr)
+		err = http.ListenAndServeTLS(addr, config.Global.Server.SSLCert, config.Global.Server.SSLKey, app.Global)
+	} else {
+		glog.Info("ListenAndServe: http://%s", addr)
+		err = http.ListenAndServe(addr, app.Global)
+	}
+	if err != nil {
+		glog.Fatal("failed to listen and serve [%s]", err.Error())
+	}
+}
+
+func initApp() {
+	app.Generate()
+	ok := wecom.Load()
+	if !ok {
+		glog.Fatal("wecom load failed")
+	}
+}
+
+func initDatabase() {
+	db.CreateDatabase()
+	ok := wecom.InsertDatabaseTable()
+	if !ok {
+		glog.Fatal("init wecom database failed")
+	}
+
+	os.Exit(0)
+}
+
+func setGlog() {
+	if config.Global.Log.LogToFile {
+		err := glog.SetLogFile(config.Global.Log.FilePath)
+		if err != nil {
+			glog.Fatal("failed to set log file [%s]", err.Error())
+		}
+	}
 	glogMask := 0
 	if config.Global.Log.MaskUnknown {
 		glogMask |= glog.MaskUNKNOWN
@@ -58,45 +111,6 @@ func main() {
 		glog.SetFlag(glog.FlagStdFlag)
 	} else {
 		glog.SetFlag(glog.FlagStdFlag | glog.FlagShortFile)
-	}
-
-	if *isInit {
-		db.CreateDatabase()
-		wecom.InsertDatabaseTable()
-		os.Exit(0)
-	}
-
-	if util.FileStat(config.Global.Database.Path) != 2 {
-		glog.Fatal("missing database [%s]!", config.Global.Database.Path)
-	}
-
-	if config.Global.Log.LogToFile {
-		err = glog.SetLogFile(config.Global.Log.FilePath)
-		if err != nil {
-			glog.Fatal("failed to set log file [%s]", err.Error())
-		}
-	}
-
-	EnableShutDownListener()
-
-	app.Generate()
-	ok := wecom.Load()
-	if !ok {
-		glog.Fatal("wecom load failed")
-	}
-
-	send.EnableServer()
-
-	addr := fmt.Sprintf("%s:%d", config.Global.Server.HTTPAddr, config.Global.Server.HTTPPort)
-	if config.Global.Server.EnableHTTPS {
-		glog.Info("ListenAndServe: https://%s", addr)
-		err = http.ListenAndServeTLS(addr, config.Global.Server.SSLCert, config.Global.Server.SSLKey, app.Global)
-	} else {
-		glog.Info("ListenAndServe: http://%s", addr)
-		err = http.ListenAndServe(addr, app.Global)
-	}
-	if err != nil {
-		glog.Fatal("failed to listen and serve [%s]", err.Error())
 	}
 }
 
