@@ -48,7 +48,7 @@ func (m *Model) Handle(w http.ResponseWriter, r *http.Request) {
 }
 
 func (m *Model) Prepare(id int64, data *mod.MessageModel) mod.Package {
-	wecom := getWecomByID(id)
+	wecom := getWecomByID(id, true)
 	if wecom == nil {
 		return nil
 	}
@@ -75,5 +75,5 @@ func (m *Model) Prepare(id int64, data *mod.MessageModel) mod.Package {
 }
 
 func (m *Model) GetTarget(id int64) mod.Target {
-	return getWecomByID(id)
+	return getWecomByID(id, false)
 }

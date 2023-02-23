@@ -69,7 +69,7 @@ func InsertDatabaseTable() bool {
 	return true
 }
 
-func getWecomByID(id int64) *ModWecomModel {
+func getWecomByID(id int64, isUsed bool) *ModWecomModel {
 	d := db.Connect()
 	if d == nil {
 		return nil
@@ -77,21 +77,24 @@ func getWecomByID(id int64) *ModWecomModel {
 	d = d.Model(&ModWecomModel{})
 	dbLock.Lock()
 	defer dbLock.Unlock()
+
 	wecom := new(ModWecomModel)
 	res := d.Where("id=?", id).First(wecom)
 	if res.Error != nil || res.RowsAffected != 1 {
 		return nil
 	}
 
-	now := time.Now().Unix()
-	if now > wecom.ValidityPeriod {
-		return nil
-	}
+	if isUsed {
+		now := time.Now().Unix()
+		if now > wecom.ValidityPeriod {
+			return nil
+		}
 
-	res = d.Where("id=?", id).Limit(1).Update("last_used", now)
-	if res.Error != nil || res.RowsAffected != 1 {
-		glog.Warning("failed to update last_used [%s]", res.Error)
-		return nil
+		res = d.Where("id=?", id).Limit(1).Update("last_used", now)
+		if res.Error != nil || res.RowsAffected != 1 {
+			glog.Warning("failed to update last_used [%s]", res.Error)
+			return nil
+		}
 	}
 
 	return wecom
@@ -105,6 +108,7 @@ func getWecom() []ModWecomModel {
 	d = d.Model(&ModWecomModel{})
 	dbLock.RLock()
 	defer dbLock.RUnlock()
+
 	wecom := make([]ModWecomModel, 0)
 	res := d.Where("expired=0").Find(&wecom)
 	if res.Error != nil {
@@ -136,4 +140,22 @@ func insertWecom(data *ModWecomModel) bool {
 	}
 
 	return false
+}
+
+func ModifyWecom(data *ModWecomModel) bool {
+	d := db.Connect()
+	if d == nil {
+		return false
+	}
+	d = d.Model(&ModWecomModel{})
+	dbLock.RLock()
+	defer dbLock.RUnlock()
+
+	res := d.Where("id=?", data.ID).Limit(1).Updates(data)
+	if res.Error != nil || res.RowsAffected != 1 {
+		glog.Warning("failed to update wecom [%v] [%v]", res.Error, res.RowsAffected)
+		return false
+	}
+
+	return true
 }

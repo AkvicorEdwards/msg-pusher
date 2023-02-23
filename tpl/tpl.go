@@ -17,6 +17,7 @@ var Login *template.Template
 var Index *template.Template
 var Secret *template.Template
 var SecretInsert *template.Template
+var SecretModify *template.Template
 var Target *template.Template
 
 func init() {
@@ -37,6 +38,10 @@ func init() {
 	SecretInsert = t.Lookup("secret_insert.gohtml")
 	if SecretInsert == nil {
 		glog.Fatal("missing html template [secret_insert.gohtml]")
+	}
+	SecretModify = t.Lookup("secret_modify.gohtml")
+	if SecretInsert == nil {
+		glog.Fatal("missing html template [secret_modify.gohtml]")
 	}
 	Target = t.Lookup("target.gohtml")
 	if Target == nil {

@@ -34,3 +34,7 @@ func GetIP(r *http.Request) string {
 func LastPage(w http.ResponseWriter, r *http.Request) {
 	RespRedirect(w, r, r.URL.String()[:strings.LastIndexByte(r.URL.String(), '/')])
 }
+
+func Reload(w http.ResponseWriter, r *http.Request) {
+	RespRedirect(w, r, r.URL.String())
+}

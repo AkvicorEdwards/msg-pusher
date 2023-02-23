@@ -14,6 +14,7 @@ var tpls *template.Template
 var tplIndex *template.Template
 var tplSecret *template.Template
 var tplSecretInsert *template.Template
+var tplSecretModify *template.Template
 
 func init() {
 	tpls = template.Must(template.ParseFS(htmlFS, "static/html/*"))
@@ -29,5 +30,9 @@ func init() {
 	tplSecretInsert = tpls.Lookup("secret_insert.gohtml")
 	if tplSecretInsert == nil {
 		glog.Fatal("missing html template [secret_insert.gohtml]")
+	}
+	tplSecretModify = tpls.Lookup("secret_modify.gohtml")
+	if tplSecretModify == nil {
+		glog.Fatal("missing html template [secret_modify.gohtml]")
 	}
 }

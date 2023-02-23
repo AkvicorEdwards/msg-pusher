@@ -70,6 +70,9 @@ func secret(w http.ResponseWriter, r *http.Request) {
 	case "/insert":
 		secretInsert(w, r)
 		return
+	case "/modify":
+		secretModify(w, r)
+		return
 	}
 
 	if r.Method == http.MethodGet {
@@ -88,7 +91,7 @@ func secretInsert(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		_ = tpl.SecretInsert.Execute(w, map[string]any{"title": "Secret Insert"})
+		_ = tpl.SecretInsert.Execute(w, map[string]any{"title": "Secret Insert", "default_time": time.Unix(0, 0).Format("2006-01-02T15:04")})
 	} else if r.Method == "POST" {
 		callerPst := r.PostFormValue("caller")
 		if len(callerPst) < 1 {
@@ -96,7 +99,7 @@ func secretInsert(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		validityPeriodPst := r.PostFormValue("validity_period")
-		validityPeriodTime, err := time.ParseInLocation("2006-01-02T00:00", validityPeriodPst, time.Local)
+		validityPeriodTime, err := time.ParseInLocation("2006-01-02T15:04", validityPeriodPst, time.Local)
 		if err != nil {
 			RespAPIInvalidInput(w)
 			return
@@ -111,6 +114,66 @@ func secretInsert(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		LastPage(w, r)
+	}
+}
+
+func secretModify(w http.ResponseWriter, r *http.Request) {
+	head, tail := util.SplitPathRepeat(r.URL.Path, 1)
+	glog.Debug("[%-4s][%-32s] [%s][%s]", r.Method, "/secret/modify", head, tail)
+	if !SessionVerify(r) {
+		Login(w, r)
+		return
+	}
+	if len(tail) <= 1 {
+		return
+	}
+
+	id, err := strconv.ParseInt(tail[1:], 10, 64)
+	if err != nil {
+		return
+	}
+
+	sec := db.GetSecretByID(id)
+	if sec == nil {
+		return
+	}
+
+	if r.Method == "GET" {
+		validityPeriod := time.Unix(sec.ValidityPeriod, 0).Format("2006-01-02T15:04")
+		createTime := time.Unix(sec.CreateTime, 0).Format("2006-01-02T15:04")
+		lastUsed := time.Unix(sec.LastUsed, 0).Format("2006-01-02T15:04")
+		expired := time.Unix(sec.Expired, 0).Format("2006-01-02T15:04")
+
+		_ = tpl.SecretModify.Execute(w, map[string]any{"title": "Secret Modify", "id": sec.ID, "secret": sec.Secret,
+			"caller": sec.Caller, "validity_period": validityPeriod, "create_time": createTime, "last_used": lastUsed, "expired": expired})
+	} else if r.Method == "POST" {
+		callerPst := r.PostFormValue("caller")
+		if len(callerPst) < 1 {
+			RespAPIInvalidInput(w)
+			return
+		}
+		sec.Caller = callerPst
+		validityPeriodPst := r.PostFormValue("validity_period")
+		validityPeriodTime, err := time.ParseInLocation("2006-01-02T15:04", validityPeriodPst, time.Local)
+		if err != nil {
+			RespAPIInvalidInput(w)
+			return
+		}
+		sec.ValidityPeriod = validityPeriodTime.Unix()
+		expiredPst := r.PostFormValue("expired")
+		expiredTime, err := time.ParseInLocation("2006-01-02T15:04", expiredPst, time.Local)
+		if err != nil {
+			RespAPIInvalidInput(w)
+			return
+		}
+		sec.Expired = expiredTime.Unix()
+
+		res := db.ModifySecret(sec)
+		if !res {
+			RespAPIProcessingFailed(w)
+			return
+		}
+		Reload(w, r)
 	}
 }
 
