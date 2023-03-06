@@ -91,17 +91,17 @@ func secretInsert(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method == "GET" {
-		_ = tpl.SecretInsert.Execute(w, map[string]any{"title": "Secret Insert", "default_time": time.Unix(0, 0).Format("2006-01-02T15:04")})
+		_ = tpl.SecretInsert.Execute(w, map[string]any{"title": "Secret Insert", "default_time": time.Now().AddDate(100, 0, 0).Format("2006-01-02T15:04")})
 	} else if r.Method == "POST" {
 		callerPst := r.PostFormValue("caller")
 		if len(callerPst) < 1 {
-			RespAPIInvalidInput(w)
+			RespAPIInvalidInput(w, "invalid caller")
 			return
 		}
 		validityPeriodPst := r.PostFormValue("validity_period")
 		validityPeriodTime, err := time.ParseInLocation("2006-01-02T15:04", validityPeriodPst, time.Local)
 		if err != nil {
-			RespAPIInvalidInput(w)
+			RespAPIInvalidInput(w, "invalid validity period")
 			return
 		}
 		data := new(db.SecretModel)
@@ -110,7 +110,7 @@ func secretInsert(w http.ResponseWriter, r *http.Request) {
 		data.ValidityPeriod = validityPeriodTime.Unix()
 		res := db.InsertSecret(data)
 		if !res {
-			RespAPIProcessingFailed(w)
+			RespAPIProcessingFailed(w, "")
 			return
 		}
 		LastPage(w, r)
@@ -149,28 +149,28 @@ func secretModify(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == "POST" {
 		callerPst := r.PostFormValue("caller")
 		if len(callerPst) < 1 {
-			RespAPIInvalidInput(w)
+			RespAPIInvalidInput(w, "invalid caller")
 			return
 		}
 		sec.Caller = callerPst
 		validityPeriodPst := r.PostFormValue("validity_period")
 		validityPeriodTime, err := time.ParseInLocation("2006-01-02T15:04", validityPeriodPst, time.Local)
 		if err != nil {
-			RespAPIInvalidInput(w)
+			RespAPIInvalidInput(w, "invalid validity period")
 			return
 		}
 		sec.ValidityPeriod = validityPeriodTime.Unix()
 		expiredPst := r.PostFormValue("expired")
 		expiredTime, err := time.ParseInLocation("2006-01-02T15:04", expiredPst, time.Local)
 		if err != nil {
-			RespAPIInvalidInput(w)
+			RespAPIInvalidInput(w, "invalid expired time")
 			return
 		}
 		sec.Expired = expiredTime.Unix()
 
 		res := db.ModifySecret(sec)
 		if !res {
-			RespAPIProcessingFailed(w)
+			RespAPIProcessingFailed(w, "")
 			return
 		}
 		Reload(w, r)
@@ -219,7 +219,7 @@ func send(w http.ResponseWriter, r *http.Request) {
 		for _, v := range targetStr {
 			_, err := strconv.ParseInt(strings.TrimSpace(v), 10, 64)
 			if err != nil {
-				RespAPIInvalidInput(w)
+				RespAPIInvalidInput(w, "invalid target")
 				return
 			}
 		}
@@ -227,7 +227,7 @@ func send(w http.ResponseWriter, r *http.Request) {
 		sec := db.GetSecret(secretPst)
 		if sec == nil {
 			glog.Trace("failed to get secret [%s]", secretPst)
-			RespAPIInvalidInput(w)
+			RespAPIInvalidInput(w, "invalid secret")
 			return
 		}
 
@@ -235,13 +235,13 @@ func send(w http.ResponseWriter, r *http.Request) {
 		msg := mod.ParseMessage([]byte(dataPst))
 		if msg == nil {
 			glog.Warning("parse message failed")
-			RespAPIProcessingFailed(w)
+			RespAPIProcessingFailed(w, "invalid msg")
 			return
 		}
 		hid := db.InsertHistory(sec.ID, targetPst, dataPst, callerPst, GetIP(r))
 		if hid < 0 {
 			glog.Warning("insert history failed")
-			RespAPIProcessingFailed(w)
+			RespAPIProcessingFailed(w, "")
 			return
 		}
 		sendpkg.InsertByHistoryID(hid)

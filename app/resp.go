@@ -47,11 +47,17 @@ func RespAPIOk(w http.ResponseWriter) {
 	_, _ = w.Write([]byte(NewResp(RespCodeOKCode, RespCodeOKMsg).String()))
 }
 
-func RespAPIInvalidInput(w http.ResponseWriter) {
+func RespAPIInvalidInput(w http.ResponseWriter, msg string) {
+	if len(msg) == 0 {
+		msg = RespCodeInvalidInputMsg
+	}
 	_, _ = w.Write([]byte(NewResp(RespCodeInvalidInputCode, RespCodeInvalidInputMsg).String()))
 }
 
-func RespAPIProcessingFailed(w http.ResponseWriter) {
+func RespAPIProcessingFailed(w http.ResponseWriter, msg string) {
+	if len(msg) == 0 {
+		msg = RespCodeProcessingFailedMsg
+	}
 	_, _ = w.Write([]byte(NewResp(RespCodeProcessingFailedCode, RespCodeProcessingFailedMsg).String()))
 }
 
