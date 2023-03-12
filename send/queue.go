@@ -152,12 +152,13 @@ func waitSend(item *queueItem) {
 			ok = item.Package.Send()
 			if ok {
 				glog.Trace("sent [%s]", item.Message.String())
-				db.UpdateHistory(item.History.ID, false)
+				db.UpdateHistory(item.History.ID, false, false)
 				return
 			}
 			limit *= 2
 			time.Sleep(time.Duration(limit) * time.Second)
 		}
+		db.UpdateHistory(item.History.ID, false, true)
 		glog.Trace("send failed [%s]", item.Message.String())
 	}
 }

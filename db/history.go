@@ -87,7 +87,7 @@ func InsertHistory(secretID int64, targets string, data string, caller string, i
 	return his.ID
 }
 
-func UpdateHistory(id int64, enforce bool) {
+func UpdateHistory(id int64, enforce, discard bool) {
 	d := Connect()
 	if d == nil {
 		return
@@ -96,11 +96,16 @@ func UpdateHistory(id int64, enforce bool) {
 	historyLock.Lock()
 	defer historyLock.Unlock()
 
+	var f int64 = 1
+	if discard {
+		f = -1
+	}
+
 	var res *gorm.DB
 	if enforce {
-		res = d.Where("id=?", id).Update("sent", time.Now().Unix())
+		res = d.Where("id=?", id).Update("sent", f*time.Now().Unix())
 	} else {
-		res = d.Where("id=? AND sent=0", id).Update("sent", time.Now().Unix())
+		res = d.Where("id=? AND sent=0", id).Update("sent", f*time.Now().Unix())
 	}
 	if res.Error != nil || res.RowsAffected != 1 {
 		glog.Warning("update history failed [%d] [%v] [%v]", id, res.Error, res.RowsAffected)
