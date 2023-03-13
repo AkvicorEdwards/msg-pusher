@@ -6,9 +6,9 @@
             <button onClick="window.location.href='/'" type="button">RETURN</button><br /><br /><br />
             {{ range .histories }}
             <label>
-                <button type="button">{{ .ID }} R[{{ .Ready }}]</button>
-                <button type="button">C[{{ .Caller }}] S[{{ .SecretID }}]</button>
-                <button type="button">I[{{ .IP }}] T[{{ .Targets }}]</button>
+                <button type="button">{{ .ID }} Ready[{{ .Ready }}]</button>
+                <button type="button">Caller[{{ .Caller }}] SecretID[{{ .SecretID }}]</button>
+                <button type="button">IP[{{ .IP }}] Target[{{ .Targets }}]</button>
                 <button type="button">Sent: [{{ .Sent }}]</button>
                 <input id="data" type="text" value="{{ .Data }}" readonly>
             </label>
