@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"github.com/AkvicorEdwards/glog"
 	"gorm.io/gorm"
 	"sync"
@@ -25,7 +26,7 @@ func (HistoryModel) TableName() string {
 }
 
 func (h *HistoryModel) Format() HistoryFormatModel {
-	return HistoryFormatModel{
+	his := HistoryFormatModel{
 		ID:       h.ID,
 		SecretID: h.SecretID,
 		Targets:  h.Targets,
@@ -33,8 +34,15 @@ func (h *HistoryModel) Format() HistoryFormatModel {
 		Caller:   h.Caller,
 		IP:       h.IP,
 		Ready:    time.Unix(h.Ready, 0).Format("2006-01-02 15:04:05"),
-		Sent:     time.Unix(h.Sent, 0).Format("2006-01-02 15:04:05"),
 	}
+	if h.Sent == 0 {
+		his.Sent = "Pending"
+	} else if h.Sent < 0 {
+		his.Sent = fmt.Sprintf("Discard[%s]", time.Unix(h.Sent, 0).Format("2006-01-02 15:04:05"))
+	} else {
+		his.Sent = fmt.Sprintf("Sent[%s]", time.Unix(h.Sent, 0).Format("2006-01-02 15:04:05"))
+	}
+	return his
 }
 
 type HistoryFormatModel struct {
