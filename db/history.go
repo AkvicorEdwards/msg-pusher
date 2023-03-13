@@ -38,9 +38,9 @@ func (h *HistoryModel) Format() HistoryFormatModel {
 	if h.Sent == 0 {
 		his.Sent = "Pending"
 	} else if h.Sent < 0 {
-		his.Sent = fmt.Sprintf("Discard[%s]", time.Unix(h.Sent, 0).Format("2006-01-02 15:04:05"))
+		his.Sent = fmt.Sprintf("Discard: [%s]", time.Unix(h.Sent, 0).Format("2006-01-02 15:04:05"))
 	} else {
-		his.Sent = fmt.Sprintf("Sent[%s]", time.Unix(h.Sent, 0).Format("2006-01-02 15:04:05"))
+		his.Sent = fmt.Sprintf("Sent: [%s]", time.Unix(h.Sent, 0).Format("2006-01-02 15:04:05"))
 	}
 	return his
 }
