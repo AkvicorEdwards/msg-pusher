@@ -5,6 +5,7 @@
         <form class="form">
             <button onClick="window.location.href='/secret'" type="button">SECRET</button><br /><br />
             <button onClick="window.location.href='/target'" type="button">TARGET</button><br /><br />
+            <button onClick="window.location.href='/history'" type="button">HISTORY</button><br /><br />
             <br />
             {{ range .mods }}
                 <button onClick="window.location.href='{{ .Url }}'" type="button">{{ .Name }}</button><br /><br />

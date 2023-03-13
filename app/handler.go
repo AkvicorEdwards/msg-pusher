@@ -205,6 +205,26 @@ func target(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func history(w http.ResponseWriter, r *http.Request) {
+	head, tail := util.SplitPathRepeat(r.URL.Path, 1)
+	glog.Debug("[%-4s][%-32s] [%s][%s]", r.Method, "/history", head, tail)
+	if !SessionVerify(r) {
+		Login(w, r)
+		return
+	}
+
+	if r.Method == http.MethodGet {
+		his := db.GetAllHistories()
+		glog.Debug("%#v", his)
+		histories := make([]db.HistoryFormatModel, len(his))
+		for k, v := range his {
+			histories[k] = v.Format()
+		}
+		_ = tpl.History.Execute(w, map[string]any{"title": "History", "histories": histories})
+		return
+	}
+}
+
 func send(w http.ResponseWriter, r *http.Request) {
 	head, tail := util.SplitPathRepeat(r.URL.Path, 1)
 	glog.Debug("[%-4s][%-32s] [%s][%s]", r.Method, "/send", head, tail)

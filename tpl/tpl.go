@@ -19,6 +19,7 @@ var Secret *template.Template
 var SecretInsert *template.Template
 var SecretModify *template.Template
 var Target *template.Template
+var History *template.Template
 
 func init() {
 	t := template.Must(template.ParseFS(html, "static/html/*"))
@@ -46,5 +47,9 @@ func init() {
 	Target = t.Lookup("target.gohtml")
 	if Target == nil {
 		glog.Fatal("missing html template [target.gohtml]")
+	}
+	History = t.Lookup("history.gohtml")
+	if History == nil {
+		glog.Fatal("missing html template [history.gohtml]")
 	}
 }

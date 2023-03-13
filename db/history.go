@@ -24,6 +24,30 @@ func (HistoryModel) TableName() string {
 	return "history"
 }
 
+func (h *HistoryModel) Format() HistoryFormatModel {
+	return HistoryFormatModel{
+		ID:       h.ID,
+		SecretID: h.SecretID,
+		Targets:  h.Targets,
+		Data:     h.Data,
+		Caller:   h.Caller,
+		IP:       h.IP,
+		Ready:    time.Unix(h.Ready, 0).Format("2006-01-02 15:04:05"),
+		Sent:     time.Unix(h.Sent, 0).Format("2006-01-02 15:04:05"),
+	}
+}
+
+type HistoryFormatModel struct {
+	ID       int64
+	SecretID int64
+	Targets  string
+	Data     string
+	Caller   string
+	IP       string
+	Ready    string
+	Sent     string
+}
+
 func GetHistory(id int64) *HistoryModel {
 	d := Connect()
 	if d == nil {
@@ -40,6 +64,24 @@ func GetHistory(id int64) *HistoryModel {
 		return nil
 	}
 	return history
+}
+
+func GetAllHistories() []HistoryModel {
+	d := Connect()
+	if d == nil {
+		return nil
+	}
+	d = d.Model(&HistoryModel{})
+	historyLock.RLock()
+	defer historyLock.RUnlock()
+
+	histories := make([]HistoryModel, 0)
+	res := d.Find(&histories)
+	if res.Error != nil {
+		glog.Warning("get all histories failed [%v] [%v]", res.Error, res.RowsAffected)
+		return nil
+	}
+	return histories
 }
 
 func GetPendingHistories() []HistoryModel {

@@ -29,5 +29,6 @@ func Generate() {
 	Global.handler["/login"] = Login
 	Global.handler["/secret"] = secret
 	Global.handler["/target"] = target
+	Global.handler["/history"] = history
 	Global.handler["/send"] = send
 }
